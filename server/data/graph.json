@@ -1,0 +1,24 @@
+[
+  { "from": "st_west_terminal", "to": "st_museum", "lineId": "ln_5b", "mode": "bus", "duration": 6, "cost": 6000, "distance": 1.2 },
+  { "from": "st_museum", "to": "st_central", "lineId": "ln_5b", "mode": "bus", "duration": 7, "cost": 6000, "distance": 1.6 },
+  { "from": "st_central", "to": "st_lakefront", "lineId": "ln_5b", "mode": "bus", "duration": 5, "cost": 4000, "distance": 1.0 },
+  { "from": "st_lakefront", "to": "st_old_quarter", "lineId": "ln_5b", "mode": "bus", "duration": 4, "cost": 4000, "distance": 0.8 },
+
+  { "from": "st_airport", "to": "st_riverside", "lineId": "ln_t1", "mode": "train", "duration": 8, "cost": 12000, "distance": 5.4 },
+  { "from": "st_riverside", "to": "st_central", "lineId": "ln_t1", "mode": "train", "duration": 6, "cost": 9000, "distance": 4.2 },
+  { "from": "st_central", "to": "st_tech_park", "lineId": "ln_t1", "mode": "train", "duration": 10, "cost": 14000, "distance": 6.2 },
+
+  { "from": "st_airport", "to": "st_riverside", "lineId": "ln_r2", "mode": "bus", "duration": 12, "cost": 7000, "distance": 6.0 },
+  { "from": "st_riverside", "to": "st_lakefront", "lineId": "ln_r2", "mode": "bus", "duration": 5, "cost": 5000, "distance": 1.4 },
+  { "from": "st_lakefront", "to": "st_museum", "lineId": "ln_r2", "mode": "bus", "duration": 6, "cost": 5000, "distance": 1.5 },
+  { "from": "st_museum", "to": "st_west_terminal", "lineId": "ln_r2", "mode": "bus", "duration": 6, "cost": 5000, "distance": 1.4 },
+
+  { "from": "st_old_quarter", "to": "st_lakefront", "lineId": "ln_b10", "mode": "bus", "duration": 4, "cost": 4000, "distance": 0.9 },
+  { "from": "st_lakefront", "to": "st_riverside", "lineId": "ln_b10", "mode": "bus", "duration": 6, "cost": 4000, "distance": 1.7 },
+  { "from": "st_riverside", "to": "st_airport", "lineId": "ln_b10", "mode": "bus", "duration": 9, "cost": 4000, "distance": 5.0 },
+
+  { "from": "st_central", "to": "st_museum", "lineId": "walk", "mode": "walk", "duration": 12, "cost": 0, "distance": 0.9 },
+  { "from": "st_central", "to": "st_old_quarter", "lineId": "walk", "mode": "walk", "duration": 14, "cost": 0, "distance": 1.1 },
+  { "from": "st_riverside", "to": "st_old_quarter", "lineId": "walk", "mode": "walk", "duration": 15, "cost": 0, "distance": 1.3 }
+]
+

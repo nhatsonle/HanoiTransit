@@ -1,0 +1,51 @@
+[
+  {
+    "id": "st_central",
+    "name": "Ga Trung Tâm",
+    "coords": { "lat": 21.028511, "lng": 105.804817 },
+    "type": "train"
+  },
+  {
+    "id": "st_old_quarter",
+    "name": "Bến Cổ",
+    "coords": { "lat": 21.03527, "lng": 105.83664 },
+    "type": "bus"
+  },
+  {
+    "id": "st_lakefront",
+    "name": "Hồ Ánh Sáng",
+    "coords": { "lat": 21.0247, "lng": 105.8323 },
+    "type": "bus"
+  },
+  {
+    "id": "st_museum",
+    "name": "Viện Bảo Tàng",
+    "coords": { "lat": 21.0301, "lng": 105.8102 },
+    "type": "bus"
+  },
+  {
+    "id": "st_west_terminal",
+    "name": "Bến Tây",
+    "coords": { "lat": 21.0176, "lng": 105.7907 },
+    "type": "bus"
+  },
+  {
+    "id": "st_airport",
+    "name": "Sân Bay Mới",
+    "coords": { "lat": 21.2212, "lng": 105.8079 },
+    "type": "train"
+  },
+  {
+    "id": "st_tech_park",
+    "name": "Khu Công Nghệ",
+    "coords": { "lat": 21.0107, "lng": 105.842 },
+    "type": "bus"
+  },
+  {
+    "id": "st_riverside",
+    "name": "Bờ Sông",
+    "coords": { "lat": 21.0413, "lng": 105.8215 },
+    "type": "bus"
+  }
+]
+
