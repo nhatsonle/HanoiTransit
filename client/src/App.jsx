@@ -4,6 +4,7 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import RouteDetailPage from './pages/RouteDetailPage';
 import LineLookupPage from './pages/LineLookupPage';
 import ProfilePage from './pages/ProfilePage';
+import TestMapPage from './pages/TestMapPage';
 import { useAuth } from './contexts/AuthContext';
 
 const navLinks = [
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/route/:routeId" element={<RouteDetailPage />} />
           <Route path="/lines" element={<LineLookupPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/test-map" element={<TestMapPage />} />
         </Routes>
       </main>
 

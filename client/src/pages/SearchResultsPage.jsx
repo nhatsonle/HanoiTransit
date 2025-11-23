@@ -35,8 +35,19 @@ export default function SearchResultsPage() {
           from: searchPayload.from.coords,
           to: searchPayload.to.coords,
         });
-        setRoutes(response.routes);
-        setSummary({ from: response.from, to: response.to });
+
+        // Xử lý trường hợp đề xuất đi bộ
+        if (response.walkingRoute) {
+          setSummary({
+            from: response.from,
+            to: response.to,
+            walkingRoute: response.walkingRoute
+          });
+          setRoutes([]);
+        } else {
+          setRoutes(response.routes);
+          setSummary({ from: response.from, to: response.to });
+        }
       } catch (err) {
         setError(
           err?.response?.data?.message ||
@@ -87,11 +98,28 @@ export default function SearchResultsPage() {
           <p className="eyebrow">Từ {summary?.from?.name} đến {summary?.to?.name}</p>
           <h1>Kết quả đề xuất</h1>
         </div>
-        <FilterTabs activeFilter={activeFilter} onChange={setActiveFilter} />
+        {!summary?.walkingRoute && <FilterTabs activeFilter={activeFilter} onChange={setActiveFilter} />}
       </header>
 
       {loading && <p>Đang tìm lộ trình tối ưu...</p>}
       {error && <p className="error-text">{error}</p>}
+
+      {/* Hiển thị đề xuất đi bộ nếu 2 điểm gần nhau */}
+      {summary?.walkingRoute && (
+        <div className="info-banner" style={{ padding: '20px', margin: '20px 0' }}>
+          <h2>🚶 Đề xuất: Đi bộ</h2>
+          <p style={{ fontSize: '18px', margin: '10px 0' }}>
+            {summary.walkingRoute.message}
+          </p>
+          <div style={{ marginTop: '15px' }}>
+            <p><strong>Khoảng cách:</strong> {(summary.walkingRoute.distance * 1000).toFixed(0)} mét</p>
+            <p><strong>Thời gian dự kiến:</strong> {summary.walkingRoute.duration} phút</p>
+          </div>
+          <p style={{ marginTop: '15px', color: '#666' }}>
+            💡 Hai địa điểm của bạn nằm rất gần nhau, đi bộ sẽ nhanh và tiện hơn là đi xe buýt.
+          </p>
+        </div>
+      )}
 
       <div className="results-grid">
         {sortedRoutes.map((route, index) => (
@@ -103,6 +131,10 @@ export default function SearchResultsPage() {
           />
         ))}
       </div>
+
+      {!loading && !error && !summary?.walkingRoute && sortedRoutes.length === 0 && (
+        <p className="info-banner">Không tìm thấy lộ trình phù hợp.</p>
+      )}
 
       {toast && <div className="toast">{toast}</div>}
     </div>

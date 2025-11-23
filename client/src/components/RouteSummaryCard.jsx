@@ -18,6 +18,9 @@ export default function RouteSummaryCard({
       <div className="route-meta">
         <span>Chi phí ước tính: {route.summary.totalCost.toLocaleString()}đ</span>
         <span>{route.summary.transfers} lần chuyển tuyến</span>
+        {route.summary.startWalkTime > 0 && (
+          <span>Đi bộ tới trạm: {route.summary.startWalkTime} phút</span>
+        )}
       </div>
 
       <ul className="segment-list">

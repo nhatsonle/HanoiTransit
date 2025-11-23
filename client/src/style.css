@@ -166,6 +166,10 @@ input {
   font-size: 1rem;
 }
 
+input.input-error {
+  border-color: #dc2626;
+}
+
 .input-with-addon {
   display: flex;
   gap: 0.5rem;
@@ -294,6 +298,11 @@ h3 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
+  min-height: 420px;
+}
+
+.detail-grid .map-container {
+  min-height: 420px;
 }
 
 .detail-card {
@@ -397,7 +406,12 @@ h3 {
 }
 
 .line-panel__map {
-  height: 300px;
+  height: 400px;
+  width: 100%;
+}
+
+.line-panel__map .map-container {
+  height: 100%;
 }
 
 .nearby-list {
@@ -453,6 +467,79 @@ h3 {
   color: #1d4ed8;
   padding: 0.8rem 1rem;
   border-radius: 12px;
+}
+
+/* PlaceAutocomplete styles */
+.place-autocomplete {
+  position: relative;
+  flex: 1;
+}
+
+.autocomplete-loading {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.autocomplete-item .place-name {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+
+.autocomplete-item .place-full-name {
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.autocomplete-empty {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  z-index: 100;
 }
 
 @media (max-width: 900px) {

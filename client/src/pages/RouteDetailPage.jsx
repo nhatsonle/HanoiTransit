@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import MapViewer from '../components/MapViewer';
-import StepList from '../components/StepList';
-import { getRouteDetails, saveFavorite } from '../services/api';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import SimpleMapViewer from '../components/SimpleMapViewer';
+import StepList from '../components/StepList';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { getRouteDetails, saveFavorite } from '../services/api';
 
 export default function RouteDetailPage() {
   const { routeId } = useParams();
@@ -15,18 +16,30 @@ export default function RouteDetailPage() {
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
+    console.log('🔍 RouteDetailPage mounted, routeId:', routeId);
+
     const loadDetails = async () => {
       try {
         setLoading(true);
+        console.log('📡 Fetching route details...');
         const data = await getRouteDetails(routeId);
+        console.log('✅ Route data received:', data);
         setRoute(data);
+        setError(null);
       } catch (err) {
+        console.error('❌ Error loading route:', err);
         setError(err?.response?.data?.message || 'Không thể tải chi tiết lộ trình.');
       } finally {
         setLoading(false);
       }
     };
-    loadDetails();
+
+    if (routeId) {
+      loadDetails();
+    } else {
+      setError('Thiếu ID lộ trình');
+      setLoading(false);
+    }
   }, [routeId]);
 
   const handleSave = async () => {
@@ -43,11 +56,32 @@ export default function RouteDetailPage() {
     }
   };
 
-  if (loading) return <p>Đang tải...</p>;
-  if (error) return <p className="error-text">{error}</p>;
-  if (!route) return <p>Không tìm thấy lộ trình.</p>;
+  console.log('🎨 Rendering RouteDetailPage:', { loading, error, hasRoute: !!route });
 
-  const realtimeAvailable = route.steps.some((step) => step.status);
+  if (loading) {
+    console.log('⏳ Showing loading state');
+    return <div className="page"><p>Đang tải chi tiết lộ trình...</p></div>;
+  }
+
+  if (error) {
+    console.log('❌ Showing error state:', error);
+    return <div className="page"><p className="error-text">{error}</p></div>;
+  }
+
+  if (!route) {
+    console.log('⚠️ No route data');
+    return <div className="page"><p>Không tìm thấy lộ trình.</p></div>;
+  }
+
+  console.log('✅ Rendering route details:', {
+    from: route.from?.name,
+    to: route.to?.name,
+    coordinatesCount: route.coordinates?.length,
+    geometriesCount: route.geometries?.length,
+    stepsCount: route.steps?.length
+  });
+
+  const realtimeAvailable = route.steps && route.steps.some((step) => step.status);
 
   return (
     <div className="page route-detail">
@@ -62,7 +96,7 @@ export default function RouteDetailPage() {
             {route.from.name} → {route.to.name}
           </h1>
           <p>
-            Khởi hành: {new Date(route.summary.departureTime).toLocaleTimeString()} ·
+            Khởi hành: {new Date(route.summary.departureTime).toLocaleTimeString()} •
             Dự kiến đến: {new Date(route.summary.arrivalTime).toLocaleTimeString()}
           </p>
         </div>
@@ -73,17 +107,37 @@ export default function RouteDetailPage() {
         </div>
       </header>
 
+      {route.notices && route.notices.length > 0 && (
+        <div className="info-banner">
+          {route.notices.map((notice, idx) => (
+            <p key={idx}>ℹ️ {notice}</p>
+          ))}
+        </div>
+      )}
+
       <section className="detail-grid">
-        <MapViewer coordinates={route.coordinates} />
+        <ErrorBoundary>
+          <div className="map-container">
+            <SimpleMapViewer
+              coordinates={route.coordinates || []}
+              geometries={route.geometries || []}
+              segments={route.segments || []}
+            />
+          </div>
+        </ErrorBoundary>
         <div className="detail-card">
           <h2>Chi tiết từng bước</h2>
-          <StepList steps={route.steps} />
+          {route.steps && route.steps.length > 0 ? (
+            <StepList steps={route.steps} />
+          ) : (
+            <p>Không có thông tin chi tiết.</p>
+          )}
         </div>
       </section>
 
       {!realtimeAvailable && (
         <p className="info-banner">
-          Dữ liệu thời gian thực hiện không khả dụng. Hiển thị theo lịch trình cố định.
+          Dữ liệu thời gian thực hiện chưa khả dụng. Hiển thị theo lịch trình cố định.
         </p>
       )}
 
@@ -94,7 +148,7 @@ export default function RouteDetailPage() {
         </article>
         <article>
           <h3>Chi phí ước tính</h3>
-          <p>{route.summary.totalCost.toLocaleString()}đ</p>
+          <p>{route.summary.totalCost.toLocaleString()}₫</p>
         </article>
         <article>
           <h3>Số lần chuyển tuyến</h3>

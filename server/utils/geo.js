@@ -1,4 +1,4 @@
-const stops = require('../data/stops.json');
+const { loadStops } = require('./gtfsLoader');
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -25,6 +25,7 @@ function findNearestStop(coords) {
   let nearest = null;
   let minDistance = Number.POSITIVE_INFINITY;
 
+  const stops = loadStops();
   stops.forEach((stop) => {
     const distance = haversineDistance(coords, stop.coords);
     if (distance < minDistance) {

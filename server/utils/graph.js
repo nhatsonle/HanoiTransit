@@ -1,7 +1,10 @@
-const stops = require('../data/stops.json');
-const lines = require('../data/lines.json');
-const rawEdges = require('../data/graph.json');
+const { loadStops, loadRoutes, buildGraphFromGtfs } = require('./gtfsLoader');
 const { haversineDistance } = require('./geo');
+
+// Load data from GTFS
+const stops = loadStops();
+const lines = loadRoutes();
+const rawEdges = buildGraphFromGtfs();
 
 const lineMap = new Map(lines.map((line) => [line.id, line]));
 const stopMap = new Map(stops.map((stop) => [stop.id, stop]));
@@ -30,7 +33,15 @@ const adjacency = buildAdjacency();
 
 function scoreEdge(edge, filter, previousLineId) {
   if (filter === 'cheapest') {
-    return edge.cost + edge.duration * 0.05;
+    // Cheapest: minimize fare (7000đ per line)
+    // Heavily penalize new bus lines
+    const isNewBusLine =
+      edge.mode !== 'walk' &&
+      previousLineId &&
+      previousLineId !== 'walk' &&
+      edge.lineId !== previousLineId;
+    const newLinePenalty = isNewBusLine ? 300 : 0; // 300 = very expensive
+    return newLinePenalty + edge.duration * 0.1;
   }
 
   if (filter === 'fewest_transfers') {
@@ -39,12 +50,24 @@ function scoreEdge(edge, filter, previousLineId) {
       edge.lineId !== previousLineId &&
       edge.mode !== 'walk' &&
       previousLineId !== 'walk';
-    const transferPenalty = isTransfer ? 15 : 0;
-    return transferPenalty + edge.duration * 0.2 + edge.distance;
+    // EXTREMELY HEAVY penalty for transfers
+    // 500 = prefer 8+ hours on same line over 1 transfer
+    const transferPenalty = isTransfer ? 500 : 0;
+
+    // Also penalize walking (prefer staying on bus)
+    const walkPenalty = edge.mode === 'walk' ? 50 : 0;
+
+    return transferPenalty + walkPenalty + edge.duration * 0.01 + edge.distance * 0.1;
   }
 
-  // fastest (default)
-  return edge.duration + edge.distance * 0.5;
+  // fastest (default) - also penalize transfers but moderately
+  const isTransfer =
+    previousLineId &&
+    edge.lineId !== previousLineId &&
+    edge.mode !== 'walk' &&
+    previousLineId !== 'walk';
+  const transferPenalty = isTransfer ? 30 : 0;
+  return transferPenalty + edge.duration + edge.distance * 0.5;
 }
 
 function reconstructPath(targetKey, previousMap) {
@@ -120,12 +143,15 @@ function buildSegments(pathEdges) {
       last.lineId === normalizedLine
     ) {
       last.duration += edge.duration;
-      last.cost += edge.cost;
+      // Don't accumulate cost - fare is fixed per line, not per segment
       last.distance += edge.distance;
       last.to = edge.to;
       last.stops.push(edge.to);
     } else {
       const line = lineMap.get(edge.lineId);
+      // Fixed fare per line: 7000-8000 VND for entire trip on that line
+      const fixedFare = edge.mode === 'walk' ? 0 : (line?.fare || 7000);
+
       segments.push({
         mode: edge.mode,
         lineId: normalizedLine,
@@ -135,7 +161,7 @@ function buildSegments(pathEdges) {
         to: edge.to,
         stops: [edge.from, edge.to],
         duration: edge.duration,
-        cost: edge.cost,
+        cost: fixedFare, // Fixed fare per line, not per segment
         distance: edge.distance,
       });
     }
@@ -204,6 +230,27 @@ function planRoute(startId, endId, filter) {
   };
 }
 
+async function planRouteWithGeometry(startId, endId, filter) {
+  const pathEdges = dijkstra(startId, endId, filter);
+  if (!pathEdges) return null;
+
+  const segments = buildSegments(pathEdges);
+  const summary = summarizeSegments(segments);
+  const coordinates = pathToCoordinates(segments);
+
+  // Get route geometries for each segment
+  const { getSegmentGeometries } = require('../services/routingService');
+  const geometries = await getSegmentGeometries(segments, stopMap);
+
+  return {
+    segments,
+    summary,
+    coordinates,
+    geometries, // Array of geometry arrays for each segment
+    stops: coordinates.map((coord) => coord.stopId),
+  };
+}
+
 function getLineById(lineId) {
   return lineMap.get(lineId);
 }
@@ -242,6 +289,7 @@ function searchStopsAndLines(query) {
 
 module.exports = {
   planRoute,
+  planRouteWithGeometry,
   getLineById,
   getStopById,
   searchStopsAndLines,

@@ -1,34 +1,36 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import useGeolocation from '../hooks/useGeolocation';
-import { STOPS } from '../data/stops';
+import PlaceAutocomplete from './PlaceAutocomplete';
+import { reverseGeocode } from '../services/geocoding';
 
 export default function SearchForm({ onSubmit, initialFrom, initialTo }) {
-  const [fromInput, setFromInput] = useState(initialFrom?.label || '');
-  const [toInput, setToInput] = useState(initialTo?.label || '');
-  const [fromCoords, setFromCoords] = useState(initialFrom?.coords || null);
-  const [toCoords, setToCoords] = useState(initialTo?.coords || null);
+  const [fromPlace, setFromPlace] = useState(initialFrom || null);
+  const [toPlace, setToPlace] = useState(initialTo || null);
   const [errors, setErrors] = useState({});
   const { requestPosition, loading: locating, error: geoError } = useGeolocation();
 
-  const stopOptions = useMemo(() => STOPS, []);
+  const handleFromChange = (place) => {
+    setFromPlace(place);
+    if (place) {
+      setErrors((prev) => ({ ...prev, from: undefined }));
+    }
+  };
 
-  const handleStopSelection = (value, setter, setCoordSetter, field) => {
-    setter(value);
-    const stop = stopOptions.find(
-      (option) => option.name.toLowerCase() === value.trim().toLowerCase()
-    );
-    if (stop) {
-      setCoordSetter(stop.coords);
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    } else {
-      setCoordSetter(null);
+  const handleToChange = (place) => {
+    setToPlace(place);
+    if (place) {
+      setErrors((prev) => ({ ...prev, to: undefined }));
     }
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!fromCoords) newErrors.from = 'Vui lòng nhập điểm đi';
-    if (!toCoords) newErrors.to = 'Vui lòng nhập điểm đến';
+    if (!fromPlace || !fromPlace.coords) {
+      newErrors.from = 'Vui lòng chọn điểm đi từ danh sách gợi ý';
+    }
+    if (!toPlace || !toPlace.coords) {
+      newErrors.to = 'Vui lòng chọn điểm đến từ danh sách gợi ý';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -37,16 +39,31 @@ export default function SearchForm({ onSubmit, initialFrom, initialTo }) {
     event.preventDefault();
     if (!validate()) return;
     onSubmit({
-      from: { label: fromInput, coords: fromCoords },
-      to: { label: toInput, coords: toCoords },
+      from: fromPlace,
+      to: toPlace,
     });
   };
 
   const handleUseLocation = async () => {
     try {
       const coords = await requestPosition();
-      setFromCoords(coords);
-      setFromInput('Vị trí của tôi');
+
+      // Thử reverse geocode để lấy tên địa chỉ
+      try {
+        const locationInfo = await reverseGeocode(coords);
+        setFromPlace({
+          label: 'Vị trí của tôi',
+          fullName: locationInfo.name,
+          coords: coords,
+        });
+      } catch {
+        // Nếu reverse geocode lỗi, vẫn dùng tọa độ
+        setFromPlace({
+          label: 'Vị trí của tôi',
+          coords: coords,
+        });
+      }
+
       setErrors((prev) => ({ ...prev, from: undefined }));
     } catch (err) {
       setErrors((prev) => ({
@@ -61,14 +78,12 @@ export default function SearchForm({ onSubmit, initialFrom, initialTo }) {
       <div className="form-row">
         <label htmlFor="from">Điểm đi</label>
         <div className="input-with-addon">
-          <input
+          <PlaceAutocomplete
             id="from"
-            value={fromInput}
-            onChange={(e) =>
-            handleStopSelection(e.target.value, setFromInput, setFromCoords, 'from')
-            }
-            placeholder="Ví dụ: Ga Trung Tâm"
-            list="stop-options"
+            value={fromPlace}
+            onChange={handleFromChange}
+            placeholder="Nhập địa chỉ hoặc địa điểm..."
+            error={errors.from}
           />
           <button
             type="button"
@@ -84,23 +99,15 @@ export default function SearchForm({ onSubmit, initialFrom, initialTo }) {
 
       <div className="form-row">
         <label htmlFor="to">Điểm đến</label>
-        <input
+        <PlaceAutocomplete
           id="to"
-          value={toInput}
-          onChange={(e) =>
-            handleStopSelection(e.target.value, setToInput, setToCoords, 'to')
-          }
-          placeholder="Ví dụ: Sân Bay Mới"
-          list="stop-options"
+          value={toPlace}
+          onChange={handleToChange}
+          placeholder="Nhập địa chỉ hoặc địa điểm..."
+          error={errors.to}
         />
         {errors.to && <p className="error-text">{errors.to}</p>}
       </div>
-
-      <datalist id="stop-options">
-        {stopOptions.map((stop) => (
-          <option value={stop.name} key={stop.id} />
-        ))}
-      </datalist>
 
       {geoError && <p className="error-text">{geoError}</p>}
 
@@ -109,7 +116,7 @@ export default function SearchForm({ onSubmit, initialFrom, initialTo }) {
           Tìm kiếm
         </button>
         <p className="helper">
-          Dùng danh sách gợi ý để đảm bảo hệ thống hiểu chính xác trạm bạn chọn.
+          Nhập tối thiểu 3 ký tự để tìm kiếm địa điểm. Chọn từ danh sách gợi ý.
         </p>
       </div>
     </form>

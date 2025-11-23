@@ -1,4 +1,4 @@
-import MapViewer from './MapViewer';
+import SimpleMapViewer from './SimpleMapViewer';
 
 export default function LineInfoPanel({ line }) {
   if (!line) {
@@ -9,6 +9,7 @@ export default function LineInfoPanel({ line }) {
     stopId: stop.id,
     name: stop.name,
     coords: stop.coords,
+    type: 'stop'
   }));
 
   return (
@@ -21,7 +22,7 @@ export default function LineInfoPanel({ line }) {
         <p>Giá vé: {line.fare.toLocaleString()}đ</p>
       </div>
       <div className="line-panel__map">
-        <MapViewer coordinates={coordinates} />
+        <SimpleMapViewer coordinates={coordinates} />
       </div>
       <div className="line-panel__stops">
         <h3>Các điểm dừng</h3>
